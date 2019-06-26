@@ -1,0 +1,22 @@
+sudo: required
+language: generic
+services:
+  - docker
+
+before_install:
+  - docker build -t isji/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true isji/docker-react npm run test -- --coverage
+
+after_success:
+  - docker build -t isji/multi-client ./client
+  - docker build -t isji/multi-nginx ./nginx
+  - docker build -t isji/multi-server ./server
+  - docker build -t isji/multi-worker ./worker
+  # Log in to docker cli
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push isji/multi-client
+  - docker push isji/multi-nginx
+  - docker push isji/multi-server
+  - docker push isji/multi-worker
